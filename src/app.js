@@ -11,26 +11,23 @@ const errorHandler = require("./middlewares/errorHandler");
 
 const app = express();
 
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-].concat(env.clientUrl ? [env.clientUrl] : []);
+const corsOptions =
+  env.nodeEnv === "development"
+    ? {
+        origin: "*",
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: "*",
+      }
+    : {
+        origin: env.clientUrl || false,
+      };
 
+app.use(cors(corsOptions));
 app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      if (!env.clientUrl) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      const err = new Error("CORS blocked for this origin");
-      err.statusCode = 403;
-      return callback(err);
-    },
+  helmet({
+    contentSecurityPolicy: false,
   })
 );
-app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
 app.set("json spaces", 2);

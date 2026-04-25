@@ -91,6 +91,18 @@ npm run dev
 
 Base URL: `http://localhost:5000`
 
+## Development Mode (Open API)
+
+In development (`NODE_ENV=development`), the API is intentionally open for easy frontend testing:
+
+- CORS allows all origins (`origin: "*"`)
+- Common CRUD methods are allowed (`GET`, `POST`, `PUT`, `DELETE`)
+- Headers are open for testing tools and browser apps
+
+This means any frontend (plain HTML, React, Vue, Postman, etc.) can call the API without CORS blockers during local development.
+
+In production, CORS is restricted to `CLIENT_URL`.
+
 ## Neon Setup
 
 1. Create a Neon project at [Neon](https://neon.tech/)
