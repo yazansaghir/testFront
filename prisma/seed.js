@@ -3,24 +3,22 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.product.deleteMany();
-
   const categoriesData = [
     {
       name: "Electronics",
-      description: "Phones, laptops, and smart accessories",
+      description: "Devices and gadgets for everyday use",
     },
     {
       name: "Books",
-      description: "Educational and fiction books",
+      description: "Learning resources and stories",
     },
     {
-      name: "Home",
-      description: "Home and kitchen essentials",
+      name: "Clothing",
+      description: "Everyday wear and fashion basics",
     },
   ];
 
-  const categories = [];
+  const categoryMap = {};
 
   for (const category of categoriesData) {
     const record = await prisma.category.upsert({
@@ -28,37 +26,69 @@ async function main() {
       update: { description: category.description },
       create: category,
     });
-    categories.push(record);
+    categoryMap[record.name] = record;
   }
 
   const productsData = [
     {
-      name: "Wireless Mouse",
-      description: "Ergonomic 2.4GHz wireless mouse",
-      price: 25.99,
-      quantity: 45,
-      categoryId: categories[0].id,
+      name: "Laptop",
+      description: "Student laptop for coding and assignments",
+      price: 750,
+      quantity: 5,
+      categoryName: "Electronics",
     },
     {
-      name: "Node.js Guide",
-      description: "Beginner friendly backend handbook",
-      price: 18.5,
-      quantity: 60,
-      categoryId: categories[1].id,
+      name: "Phone",
+      description: "Mid-range smartphone for daily use",
+      price: 500,
+      quantity: 10,
+      categoryName: "Electronics",
     },
     {
-      name: "Blender",
-      description: "1.5L kitchen blender with 3 speeds",
-      price: 49.99,
-      quantity: 15,
-      categoryId: categories[2].id,
+      name: "Novel Book",
+      description: "Popular fiction title for leisure reading",
+      price: 15,
+      quantity: 20,
+      categoryName: "Books",
+    },
+    {
+      name: "T-shirt",
+      description: "Comfortable cotton t-shirt",
+      price: 25,
+      quantity: 30,
+      categoryName: "Clothing",
     },
   ];
 
   for (const product of productsData) {
-    await prisma.product.create({
-      data: product,
+    const category = categoryMap[product.categoryName];
+    if (!category) continue;
+
+    const existing = await prisma.product.findFirst({
+      where: {
+        name: product.name,
+        categoryId: category.id,
+      },
     });
+
+    const productData = {
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      quantity: product.quantity,
+      categoryId: category.id,
+    };
+
+    if (existing) {
+      await prisma.product.update({
+        where: { id: existing.id },
+        data: productData,
+      });
+    } else {
+      await prisma.product.create({
+        data: productData,
+      });
+    }
   }
 }
 

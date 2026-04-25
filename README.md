@@ -1,229 +1,189 @@
-# Student CRUD Practice API (Node.js + Express + Prisma + Neon)
+# Student CRUD API
 
-Professional, beginner-friendly backend API for practicing CRUD operations from any frontend.
+Professional and beginner-friendly backend for practicing CRUD operations with Categories and Products.
 
-## Tech Stack
+## Project Overview
 
-- Node.js
-- Express.js
-- PostgreSQL (Neon)
-- Prisma ORM
-- dotenv
-- cors
-- helmet
-- morgan
-- zod (request validation)
+This project uses Node.js, Express, Prisma, and Neon PostgreSQL. It includes:
 
-## Project Structure
+- Layered architecture (`routes -> controller -> service`)
+- Validation with Zod
+- Centralized error handling
+- Preview endpoints for student exploration
+- Vercel-ready deployment setup
+- Root HTML landing page with quick API links
+
+## Folder Structure
 
 ```text
+api/
+  index.js
+prisma/
+  schema.prisma
+  seed.js
 src/
   app.js
   server.js
   config/
     env.js
     prisma.js
-  modules/
-    categories/
-      category.routes.js
-      category.controller.js
-      category.service.js
-      category.validation.js
-    products/
-      product.routes.js
-      product.controller.js
-      product.service.js
-      product.validation.js
   middlewares/
     errorHandler.js
     notFound.js
     validate.js
+  modules/
+    categories/
+    products/
+    preview/
   utils/
     ApiError.js
     asyncHandler.js
-prisma/
-  schema.prisma
-  seed.js
+vercel.json
 ```
 
-## Features
+## Environment Variables
 
-- Clean layered architecture (routes -> controller -> service)
-- Centralized error handling
-- Async wrapper (`asyncHandler`) to avoid repeated try/catch
-- Consistent response format for success and errors
-- Full CRUD for categories and products
-- Product filtering:
-  - by category (`categoryId`)
-  - by search (`search` in name/description)
-  - by price range (`minPrice`, `maxPrice`)
-  - pagination (`page`, `limit`)
-- Product responses include related category
-- Category delete protection when products exist
-- Security headers with Helmet, CORS support, and HTTP request logging with Morgan
+Copy `.env.example` to `.env`:
 
-## Database Models
+```env
+DATABASE_URL=""
+NODE_ENV="development"
+PORT=5000
+CLIENT_URL=""
+```
 
-### Category
-- `id` UUID primary key
-- `name` string, unique, required
-- `description` string, optional
-- `createdAt`
-- `updatedAt`
+- `DATABASE_URL`: Neon PostgreSQL connection string
+- `NODE_ENV`: `development` or `production`
+- `PORT`: local server port
+- `CLIENT_URL`: frontend URL for deployed app (optional)
 
-### Product
-- `id` UUID primary key
-- `name` string, required
-- `description` string, optional
-- `price` decimal, required, >= 0
-- `quantity` integer, default 0, >= 0
-- `categoryId` UUID, required
-- `createdAt`
-- `updatedAt`
+## Local Setup
 
-### Relationship
-- One Category has many Products
-- One Product belongs to one Category
-- Category deletion is blocked if related products exist
-
-## Setup
-
-### 1) Install dependencies
+1. Install dependencies:
 
 ```bash
 npm install
 ```
 
-### 2) Configure environment variables
-
-Copy `.env.example` to `.env` and update values:
-
-```env
-NODE_ENV=development
-PORT=5000
-CORS_ORIGIN=*
-DATABASE_URL="postgresql://USER:PASSWORD@HOST.neon.tech/DB_NAME?sslmode=require"
-```
-
-### 3) Neon PostgreSQL setup
-
-1. Create a project in [Neon](https://neon.tech/).
-2. Create a database (or use default database).
-3. Copy the connection string.
-4. Paste it into `DATABASE_URL` in `.env`.
-5. Ensure the URL includes `sslmode=require`.
-
-### 4) Prisma commands
-
-Generate Prisma client:
+2. Generate Prisma client:
 
 ```bash
 npm run prisma:generate
 ```
 
-Create and apply migrations:
+3. Run migrations (local/dev database):
 
 ```bash
 npm run prisma:migrate -- --name init
 ```
 
-Seed sample data:
+4. Seed sample data:
 
 ```bash
 npm run prisma:seed
 ```
 
-### 5) Run development server
+5. Start local server:
 
 ```bash
 npm run dev
 ```
 
-Server URL: `http://localhost:5000`
-
-Health check: `GET /health`
-
-## Available Scripts
-
-- `npm run dev` -> Run with nodemon
-- `npm start` -> Run production server
-- `npm run prisma:migrate` -> Run Prisma migrations
-- `npm run prisma:generate` -> Generate Prisma client
-- `npm run prisma:seed` -> Seed sample data
-
-## API Endpoints
-
 Base URL: `http://localhost:5000`
 
-### Categories
+## Neon Setup
+
+1. Create a Neon project at [Neon](https://neon.tech/)
+2. Copy your PostgreSQL connection string
+3. Put it in `DATABASE_URL` in `.env`
+4. Keep `sslmode=require` in the connection string
+
+## Prisma Commands
+
+- `npm run prisma:generate`
+- `npm run prisma:migrate -- --name init`
+- `npm run prisma:seed`
+
+## Seeded Data
+
+Categories:
+
+- Electronics
+- Books
+- Clothing
+
+Products:
+
+- Laptop (Electronics)
+- Phone (Electronics)
+- Novel Book (Books)
+- T-shirt (Clothing)
+
+Seed script is idempotent: running multiple times updates or reuses records without creating duplicates for the same product/category pair.
+
+## Explore the API
+
+Visit `/` to open the public preview HTML page with quick links and sample request bodies.
+
+Core endpoints:
 
 - `GET /api/categories`
-- `GET /api/categories/:id`
-- `POST /api/categories`
-- `PUT /api/categories/:id`
-- `DELETE /api/categories/:id`
-
-#### Example category request body
-
-```json
-{
-  "name": "Electronics",
-  "description": "Phones, laptops, and accessories"
-}
-```
-
-### Products
-
 - `GET /api/products`
-- `GET /api/products/:id`
-- `POST /api/products`
-- `PUT /api/products/:id`
-- `DELETE /api/products/:id`
+- `GET /api/preview/categories-with-products`
+- `GET /api/preview/stats`
 
-#### Product query parameters
+Product filters:
 
-- `categoryId` -> filter by category UUID
-- `search` -> search by product name/description
-- `minPrice` and `maxPrice` -> filter by price range
-- `page` and `limit` -> pagination
+- `/api/products?categoryId=`
+- `/api/products?search=`
+- `/api/products?minPrice=&maxPrice=`
+- `/api/products?page=1&limit=10`
 
-Example:
+Example bodies:
 
-`GET /api/products?categoryId=...&search=mouse&minPrice=10&maxPrice=100&page=1&limit=10`
-
-#### Example product request body
+`POST /api/categories`
 
 ```json
 {
-  "name": "Wireless Mouse",
-  "description": "Ergonomic and rechargeable",
-  "price": 24.99,
-  "quantity": 20,
-  "categoryId": "YOUR_CATEGORY_UUID"
+  "name": "Accessories",
+  "description": "Useful accessories"
 }
 ```
 
-## Response Format
-
-### Success
+`POST /api/products`
 
 ```json
 {
-  "success": true,
-  "message": "Operation successful",
-  "data": {}
+  "name": "Keyboard",
+  "description": "Mechanical keyboard",
+  "price": 60,
+  "quantity": 12,
+  "categoryId": "CATEGORY_ID_HERE"
 }
 ```
 
-### Error
+## Scripts
 
-```json
-{
-  "success": false,
-  "message": "Validation failed",
-  "errors": []
-}
-```
+- `npm run dev`
+- `npm start`
+- `npm run build`
+- `npm run postinstall`
+- `npm run prisma:migrate`
+- `npm run prisma:generate`
+- `npm run prisma:seed`
 
-In development, error stack traces are included to help debugging.
-In production, stack traces are hidden.
+## Deploy on Vercel
+
+1. Push this project to GitHub
+2. Import repository into Vercel
+3. Add environment variables in Vercel Project Settings:
+   - `DATABASE_URL`
+   - `CLIENT_URL` (optional, if frontend is deployed)
+   - `NODE_ENV=production`
+4. Deploy
+
+Important notes:
+
+- Vercel does not automatically run `prisma migrate dev` in production.
+- Run production-safe migrations separately (for example via CI/CD or `prisma migrate deploy` workflow).
+- Prisma Client generation is handled by `build`/`postinstall` scripts.
